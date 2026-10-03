@@ -5,7 +5,21 @@ export default function QueueBoard() {
   const [board, setBoard] = useState({ date: "", items: [] });
 
   useEffect(() => {
-    api("/api/queue").then(setBoard).catch(() => setBoard({ date: "", items: [] }));
+    let alive = true;
+    async function load() {
+      try {
+        const data = await api("/api/queue");
+        if (alive) setBoard(data);
+      } catch {
+        if (alive) setBoard({ date: "", items: [] });
+      }
+    }
+    load();
+    const timer = setInterval(load, 10000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
   }, []);
 
   const current = board.items.find((item) => item.status === "in-consult");

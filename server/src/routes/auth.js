@@ -13,7 +13,7 @@ function sign(user) {
 }
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
+  const { name, email, password, phone } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Name, email and password are required" });
   }
@@ -27,7 +27,7 @@ router.post("/register", async (req, res) => {
     email: email.toLowerCase(),
     passwordHash,
     phone: phone || "",
-    role: role === "reception" || role === "doctor" ? role : "patient"
+    role: "patient"
   });
 
   res.status(201).json({

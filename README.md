@@ -1,66 +1,37 @@
 # MediQ Clinic
 
-A **real-world MERN** system for a neighborhood clinic in India.
+MERN clinic desk for a neighborhood doctor: online appointments, walk-in tokens, and a doctor list with visit notes.
 
-Receptionists still manage walk-ins with paper tokens. Patients still call to ask "is the doctor in?". MediQ replaces that with:
+Reception still mixes booked patients and walk-ins on paper. MediQ keeps one queue so a slot is not given twice.
 
-- online appointment booking
-- a live token / queue board for the waiting room
-- doctor desk for today's list and visit notes
-- basic patient history so the clinic is not starting from scratch every visit
+## What works
 
-Built for **Sarthak Giri** (`akksj`) as a portfolio-grade MERN project — not a todo-list clone.
+- Patient register and login (JWT, bcrypt)
+- Book a doctor slot with a clash check
+- Reception check-in that issues the next token
+- Doctor desk can update only that doctor's appointments
+- Public register always creates a patient. Staff accounts come from `npm run seed`.
+- Waiting-room board refreshes every 10 seconds
 
-## Problem
+## What is not done
 
-Small clinics typically have:
+- No SMS, prescription PDF, or UPI
+- Runs locally. Not deployed.
+- The slot unique index is partial (active statuses only). Drop the old index once if a database was seeded before this change: `db.appointments.dropIndex("doctor_1_date_1_slot_1")`
 
-1. 1–3 doctors
-2. a receptionist on a phone
-3. walk-in patients mixed with booked patients
-4. no shared digital history
+## Stack
 
-That creates double-booked slots, angry waiting rooms, and lost follow-ups.
+MongoDB · Express · React (Vite) · Node.js · JWT
 
-## What this repo demonstrates
-
-| Layer | Skills shown |
-| --- | --- |
-| MongoDB | users, doctors, patients, appointments, queue tokens |
-| Express | REST API, JWT auth, role-based access |
-| React | booking flow, live queue board, doctor desk |
-| Node | env config, validation, seed script |
-
-## Roles
-
-- **Patient** — register, book a slot, see token number
-- **Reception** — check-in walk-ins, issue tokens, mark no-shows
-- **Doctor** — view today's queue, write visit notes, complete visits
-
-## Project structure
-
-```text
-mediq-clinic/
-  server/          Express + MongoDB API
-  client/          React (Vite) front-end
-```
-
-## Quick start
-
-### 1. API
+## Run
 
 ```bash
 cd server
 cp .env.example .env
-# set MONGO_URI and JWT_SECRET
 npm install
 npm run seed
 npm run dev
 ```
-
-API runs on `http://localhost:5000`.
-
-### 2. Client
 
 ```bash
 cd client
@@ -68,11 +39,7 @@ npm install
 npm run dev
 ```
 
-App runs on `http://localhost:5173`.
-
-## Seed logins
-
-After `npm run seed` in `server/`:
+API `http://localhost:5000` · client `http://localhost:5173`
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -80,16 +47,6 @@ After `npm run seed` in `server/`:
 | Reception | desk@mediq.local | Password123 |
 | Patient | patient@mediq.local | Password123 |
 
-## Roadmap (good next commits)
-
-- [ ] SMS / WhatsApp reminder via Twilio or Gupshup
-- [ ] Prescription PDF download
-- [ ] UPI payment for consultation fee
-- [ ] Multi-clinic / multi-doctor calendar
-- [ ] Socket.io so the queue board updates without refresh
-
 ## Author
 
-Sarthak Giri — MERN stack developer  
-GitHub: [akksj](https://github.com/akksj)  
-LinkedIn: [sarthak-giri-117490296](https://www.linkedin.com/in/sarthak-giri-117490296)
+Sarthak Giri · [github.com/akksj](https://github.com/akksj) · [LinkedIn](https://www.linkedin.com/in/sarthak-giri-117490296)

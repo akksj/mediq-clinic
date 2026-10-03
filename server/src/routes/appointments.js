@@ -16,6 +16,19 @@ router.post("/", auth, allow("patient", "reception"), async (req, res) => {
     return res.status(400).json({ message: "doctorId, date and slot are required" });
   }
 
+  const doctor = await User.findOne({ _id: doctorId, role: "doctor" });
+  if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+  let patientId = req.user._id;
+  if (req.user.role === "reception") {
+    if (!req.body.patientId) {
+      return res.status(400).json({ message: "patientId is required when reception books" });
+    }
+    const patient = await User.findOne({ _id: req.body.patientId, role: "patient" });
+    if (!patient) return res.status(404).json({ message: "Patient not found" });
+    patientId = patient._id;
+  }
+
   const clash = await Appointment.findOne({
     doctor: doctorId,
     date,
@@ -24,16 +37,22 @@ router.post("/", auth, allow("patient", "reception"), async (req, res) => {
   });
   if (clash) return res.status(409).json({ message: "That slot is already taken" });
 
-  const appointment = await Appointment.create({
-    patient: req.user.role === "patient" ? req.user._id : req.body.patientId,
-    doctor: doctorId,
-    date,
-    slot,
-    reason: reason || "General checkup",
-    type: type === "walkin" ? "walkin" : "booked"
-  });
-
-  res.status(201).json(appointment);
+  try {
+    const appointment = await Appointment.create({
+      patient: patientId,
+      doctor: doctorId,
+      date,
+      slot,
+      reason: reason || "General checkup",
+      type: type === "walkin" ? "walkin" : "booked"
+    });
+    res.status(201).json(appointment);
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "That slot is already taken" });
+    }
+    throw error;
+  }
 });
 
 router.get("/mine", auth, async (req, res) => {
@@ -59,8 +78,11 @@ router.patch("/:id/status", auth, allow("doctor", "reception"), async (req, res)
     return res.status(400).json({ message: "Invalid status" });
   }
 
-  const updated = await Appointment.findByIdAndUpdate(
-    req.params.id,
+  const filter = { _id: req.params.id };
+  if (req.user.role === "doctor") filter.doctor = req.user._id;
+
+  const updated = await Appointment.findOneAndUpdate(
+    filter,
     { status, ...(notes !== undefined ? { notes } : {}) },
     { new: true }
   );
